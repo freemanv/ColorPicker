@@ -1,12 +1,26 @@
 package
 {
+	import flash.display.BlendMode;
+	import flash.display.Loader;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
+	import flash.text.Font;
+	import flash.text.TextField;
+	import flash.text.TextFieldAutoSize;
+	import flash.text.TextFormat;
+	
 	
 	[SWF(width="1000", height="620", backgroundColor="#ffffff", frameRate="30")]
+
+	
 	public class ColorPicker extends Sprite
 	{
+		
+		//[Embed(source="consola.ttf", fontName="consola", embedAsCFF="false", unicodeRange="U+61,U+62,U+7b80,U+4f53,U+45,U+ff1b,U+3002,U+2e")]
+		[Embed(source="consola.ttf", fontName="consola", embedAsCFF="false",mimeType="application/x-font-truetype")]
+		static public var ConsolaFont:Class;
+		
 		var canvas:Sprite;
 		var Hue:int;
 		var Saturation:int;
@@ -18,26 +32,63 @@ package
 		var stage_width:int;
 		var stage_height:int;
 		var stop:Boolean;  /// test if the user click the mouse to freeze the color
+		var Hint:TextField;
+		var RGB:TextField;
+		var HSL:TextField;
+		var HEX:TextField;
 		
 		public function ColorPicker()
-		{
+		{						
+			
 			Lightness = 50;
 			hexString = new String();
 			stop = false;
 			stage_width = 1000;
 			stage_height = 620;
 			
+			/// register the font
+			//Font.registerFont(ConsolaFont);
+			
+			
 			canvas = new Sprite();
+			Hint = new TextField();
+			RGB = new TextField();
+			HSL = new TextField();
+			HEX = new TextField();			
 
+						
+			// initial the start text
+			var textfmt:TextFormat = new TextFormat();
+			textfmt.color = 0xffffff;
+			textfmt.size = 20;
+			textfmt.font = "consola";
+			Hint = new TextField();
+			Hint.embedFonts = true;
+			Hint.x = stage_width/2-700/2+ 300;
+			Hint.y = stage_height-150+15;
+			Hint.text = "-Click anywhere to lock color - Scroll to change luminosity-";
+			Hint.alpha = 0.5;
+			Hint.setTextFormat(textfmt);
+			Hint.autoSize = TextFieldAutoSize.CENTER;
+
+			
+			
+			/// initial the canvas
 			canvas.graphics.beginFill(0xffffff);
 			canvas.graphics.drawRect(0,0,1200,1000);
 			canvas.graphics.endFill();
 			addChild(canvas);
+			canvas.addChild(Hint);
+			canvas.addChild(RGB);
+			canvas.addChild(HSL);
+			canvas.addChild(HEX);
+			
 			
 			this.addEventListener(MouseEvent.MOUSE_MOVE,onMouseMove);
 			this.addEventListener(MouseEvent.MOUSE_WHEEL,onWheelRoll);
 			this.addEventListener(MouseEvent.CLICK,onMouseClick);
 		}
+		
 		
 		private function onMouseClick(Event:MouseEvent):void
 		{
@@ -47,6 +98,7 @@ package
 				Hue = int(mouseX*Number(360)/stage_width);
 				Saturation = int(mouseY*Number(100)/stage_height);
 				updataCanvas();
+				updataTag();
 			}
 			else
 			{
@@ -54,6 +106,7 @@ package
 			}
 		}
 				
+		
 		private function onWheelRoll(Event:MouseEvent):void
 		{
 			///  Event.delta  = 3 (flash的默认设置)
@@ -69,7 +122,45 @@ package
 					Lightness = 100;
 				
 				updataCanvas();
+				updataTag();
 			}
+		}
+		
+		private function updataTag():void
+		{
+			/// 因为 updataTag的调用在updataCanvas之后，所以不用调用graphic.clear()
+			
+			canvas.graphics.beginFill(0x333333,0.2);
+			canvas.graphics.drawRoundRect(stage_width/2-700/2,stage_height-150,700,100,65,65);
+			canvas.graphics.endFill();
+
+			var textfmt:TextFormat = new TextFormat();
+			textfmt.color = 0xffffff;
+			textfmt.size = 26;
+			textfmt.font = "consola";
+			RGB.embedFonts = true;
+			RGB.x = stage_width/2-700/2+ 15;
+			RGB.y = stage_height-150+45;
+			RGB.text = "rgb("+R+","+G+","+B+")";
+			RGB.alpha = 0.5;
+			RGB.setTextFormat(textfmt);
+			RGB.autoSize = TextFieldAutoSize.CENTER;
+			
+			HEX.embedFonts = true;
+			HEX.x = stage_width/2-700/2+ 255;
+			HEX.y = stage_height-150+45;
+			HEX.text = "hex(#"+hexString.substr(2)+")";
+			HEX.alpha = 0.5;
+			HEX.setTextFormat(textfmt);
+			HEX.autoSize = TextFieldAutoSize.CENTER;
+			
+			HSL.embedFonts = true;
+			HSL.x = stage_width/2-700/2+ 455;
+			HSL.y = stage_height-150+45;
+			HSL.text = "hsl("+Hue+","+Saturation+"%,"+Lightness+"%)";
+			HSL.alpha = 0.5;
+			HSL.setTextFormat(textfmt);
+			HSL.autoSize = TextFieldAutoSize.CENTER;
 		}
 		
 		private function updataCanvas()
@@ -91,6 +182,7 @@ package
 				Hue = int(mouseX*Number(360)/stage_width);
 				Saturation = int(mouseY*Number(100)/stage_height);
 				updataCanvas();
+				updataTag();
 			}
 		}
 		
